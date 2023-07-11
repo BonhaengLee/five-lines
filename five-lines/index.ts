@@ -18,12 +18,12 @@ enum Tile {
 }
 
 // 3. enum 이름 변경(Input -> RawInput) 후 컴파일러가 발생시킨 오류 확인
-enum RawInput {
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT,
-}
+// enum RawInput {
+//   UP,
+//   DOWN,
+//   LEFT,
+//   RIGHT,
+// }
 
 // 1. enum 값에 대한 메서드와 임시 인터페이스 도입
 // 6. Input -> Input1으로 변경
@@ -32,6 +32,8 @@ interface Input {
   isLeft(): boolean;
   isUp(): boolean;
   isDown(): boolean;
+  // 4.1.4 - 2. 메서드 선언을 복사하고 약간 다른 이름으로 지정.
+  handle(): void;
 }
 // 2. 4개의 enum 값에 대한 4개의 클래스 생성. 클래스에 해당하는 메서드를 제외하고 모두 false 반환
 class Right implements Input {
@@ -46,6 +48,12 @@ class Right implements Input {
   }
   isDown() {
     return false;
+  }
+  // 4.1.4 - 1. handleInput을 모든 클래스에 붙여 넣는다. input은 this로 바꾼다.
+  // 4.1.4 - 4. handleInput -> handle로 변경(인터페이스에 반영된 이름)
+  handle() {
+    // 4.1.4 - 3. is메서드를 인라인하고, if(true)의 본문을 제외한 모든 걸 제거
+    moveHorizontal(1);
   }
 }
 
@@ -62,6 +70,9 @@ class Left implements Input {
   isDown() {
     return false;
   }
+  handle() {
+    moveHorizontal(-1);
+  }
 }
 
 class Up implements Input {
@@ -77,6 +88,9 @@ class Up implements Input {
   isDown() {
     return false;
   }
+  handle() {
+    moveVertical(-1);
+  }
 }
 
 class Down implements Input {
@@ -91,6 +105,9 @@ class Down implements Input {
   }
   isDown() {
     return true;
+  }
+  handle() {
+    moveVertical(1);
   }
 }
 
@@ -163,11 +180,10 @@ function moveVertical(dy: number) {
 }
 // 이건 4줄처럼 보이지만 8줄이다. 어떻게 해결할까?
 // 3번 번경으로 인한 컴파일러 오류 수정
+// 1. handleInput을 모든 클래스에 붙여 넣는다. 지우는 게 아님.
+// 4.1.4 - 4. handleInput 내용을 새로운 메서드 호출로 변경
 function handleInput(input: Input) {
-  if (input.isLeft()) moveHorizontal(-1);
-  else if (input.isRight()) moveHorizontal(1);
-  else if (input.isUp()) moveVertical(-1);
-  else if (input.isDown()) moveVertical(1);
+  input.handle();
 }
 
 function handleInputs() {
