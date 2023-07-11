@@ -182,14 +182,10 @@ function moveVertical(dy: number) {
 // 3번 번경으로 인한 컴파일러 오류 수정
 // 1. handleInput을 모든 클래스에 붙여 넣는다. 지우는 게 아님.
 // 4.1.4 - 4. handleInput 내용을 새로운 메서드 호출로 변경
-function handleInput(input: Input) {
-  input.handle();
-}
-
 function handleInputs() {
   while (inputs.length > 0) {
-    let current = inputs.pop();
-    handleInput(current);
+    let input = inputs.pop();
+    input.handle();
   }
 }
 
