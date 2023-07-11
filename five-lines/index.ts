@@ -149,12 +149,18 @@ function drawPlayer(g: CanvasRenderingContext2D) {
   g.fillRect(playerx * TILE_SIZE, playery * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 }
 
-function draw() {
+function createGraphics() {
   let canvas = document.getElementById("GameCanvas") as HTMLCanvasElement;
   let g = canvas.getContext("2d");
-
   g.clearRect(0, 0, canvas.width, canvas.height);
-
+  return g;
+}
+// 좋은 함수 이름의 속성
+// 정직해야 한다. 의도를 설명해야 한다.
+// 완전해야 한다. 함수가 하는 모든 걸 담는다.
+// 도메인에서 일하는 사람이 이해할 수 있어야 한다.
+function draw() {
+  let g = createGraphics();
   drawMap(g);
   drawPlayer(g);
 }
