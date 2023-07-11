@@ -17,11 +17,81 @@ enum Tile {
   LOCK2,
 }
 
-enum Input {
+// 3. enum 이름 변경(Input -> RawInput) 후 컴파일러가 발생시킨 오류 확인
+enum RawInput {
   UP,
   DOWN,
   LEFT,
   RIGHT,
+}
+
+// 1. enum 값에 대한 메서드와 임시 인터페이스 도입
+// 6. Input -> Input1으로 변경
+interface Input {
+  isRight(): boolean;
+  isLeft(): boolean;
+  isUp(): boolean;
+  isDown(): boolean;
+}
+// 2. 4개의 enum 값에 대한 4개의 클래스 생성. 클래스에 해당하는 메서드를 제외하고 모두 false 반환
+class Right implements Input {
+  isRight() {
+    return true;
+  }
+  isLeft() {
+    return false;
+  }
+  isUp() {
+    return false;
+  }
+  isDown() {
+    return false;
+  }
+}
+
+class Left implements Input {
+  isRight() {
+    return false;
+  }
+  isLeft() {
+    return true;
+  }
+  isUp() {
+    return false;
+  }
+  isDown() {
+    return false;
+  }
+}
+
+class Up implements Input {
+  isRight() {
+    return false;
+  }
+  isLeft() {
+    return false;
+  }
+  isUp() {
+    return true;
+  }
+  isDown() {
+    return false;
+  }
+}
+
+class Down implements Input {
+  isRight() {
+    return false;
+  }
+  isLeft() {
+    return false;
+  }
+  isUp() {
+    return false;
+  }
+  isDown() {
+    return true;
+  }
 }
 
 let playerx = 1;
@@ -92,11 +162,12 @@ function moveVertical(dy: number) {
   }
 }
 // 이건 4줄처럼 보이지만 8줄이다. 어떻게 해결할까?
+// 3번 번경으로 인한 컴파일러 오류 수정
 function handleInput(input: Input) {
-  if (input === Input.LEFT) moveHorizontal(-1);
-  else if (input === Input.RIGHT) moveHorizontal(1);
-  else if (input === Input.UP) moveVertical(-1);
-  else if (input === Input.DOWN) moveVertical(1);
+  if (input.isLeft()) moveHorizontal(-1);
+  else if (input.isRight()) moveHorizontal(1);
+  else if (input.isUp()) moveVertical(-1);
+  else if (input.isDown()) moveVertical(1);
 }
 
 function handleInputs() {
@@ -199,8 +270,8 @@ const UP_KEY = 'ArrowUp';
 const RIGHT_KEY = 'ArrowRight';
 const DOWN_KEY = 'ArrowDown';
 window.addEventListener('keydown', (e) => {
-  if (e.key === LEFT_KEY || e.key === 'a') inputs.push(Input.LEFT);
-  else if (e.key === UP_KEY || e.key === 'w') inputs.push(Input.UP);
-  else if (e.key === RIGHT_KEY || e.key === 'd') inputs.push(Input.RIGHT);
-  else if (e.key === DOWN_KEY || e.key === 's') inputs.push(Input.DOWN);
+  if (e.key === LEFT_KEY || e.key === 'a') inputs.push(new Right());
+  else if (e.key === UP_KEY || e.key === 'w') inputs.push(new Up());
+  else if (e.key === RIGHT_KEY || e.key === 'd') inputs.push(new Right());
+  else if (e.key === DOWN_KEY || e.key === 's') inputs.push(new Down());
 });
