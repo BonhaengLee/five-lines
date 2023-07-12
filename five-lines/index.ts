@@ -2,7 +2,7 @@ const TILE_SIZE = 30;
 const FPS = 30;
 const SLEEP = 1000 / FPS;
 
-enum Tile {
+enum RawTile {
   AIR,
   FLUX,
   UNBREAKABLE,
@@ -15,6 +15,89 @@ enum Tile {
   LOCK1,
   KEY2,
   LOCK2,
+}
+
+interface Tile {
+  isAir(): boolean;
+  isFlux(): boolean;
+  isUnbreakable(): boolean;
+  isPlayer(): boolean;
+  isStone(): boolean;
+  isFallingStone(): boolean;
+  isBox(): boolean;
+  isFallingBox(): boolean;
+  isKey1(): boolean;
+  isLock1(): boolean;
+  isKey2(): boolean;
+  isLock2(): boolean;
+
+  color(g: CanvasRenderingContext2D): void;
+  draw(g: CanvasRenderingContext2D, x: number, y: number): void;
+  isEdible(): boolean;
+  isPushable(): boolean;
+}
+
+class Flux implements Tile {
+  isAir() {
+    return false;
+  }
+  isFlux() {
+    return true;
+  }
+  isUnbreakable() {
+    return false;
+  }
+  isPlayer() {
+    return false;
+  }
+  isStone() {
+    return false;
+  }
+  isFallingStone() {
+    return false;
+  }
+  isBox() {
+    return false;
+  }
+  isFallingBox() {
+    return false;
+  }
+  isKey1() {
+    return false;
+  }
+  isLock1() {
+    return false;
+  }
+  isKey2() {
+    return false;
+  }
+  isLock2() {
+    return false;
+  }
+  color(g: CanvasRenderingContext2D) {
+    g.fillStyle = '#ccffcc';
+  }
+  draw(g: CanvasRenderingContext2D, x: number, y: number) {
+    g.fillStyle = '#ccffcc';
+    g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+  }
+  isEdible() {
+    return false;
+  }
+  isPushable() {
+    return false;
+  }
+}
+
+class Air implements Tile {
+  isAir() {
+    return true;
+  }
+  isFlux() {
+    return false;
+  }
+  color(g: CanvasRenderingContext2D) {}
+  draw(g: CanvasRenderingContext2D, x: number, y: number) {}
 }
 
 // 3. enum 이름 변경(Input -> RawInput) 후 컴파일러가 발생시킨 오류 확인
@@ -124,11 +207,21 @@ let map: Tile[][] = [
 
 let inputs: Input[] = [];
 
-function remove(tile: Tile) {
+function removeLock1() {
   for (let y = 0; y < map.length; y++) {
     for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === tile) {
-        map[y][x] = Tile.AIR;
+      if (map[y][x].isLock1()) {
+        map[y][x] = new Air();
+      }
+    }
+  }
+}
+
+function removeLock2() {
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      if (map[y][x].isLock2()) {
+        map[y][x] = new Air();
       }
     }
   }
@@ -143,23 +236,23 @@ function moveToTile(newx: number, newy: number) {
 
 function moveHorizontal(dx: number) {
   if (
-    map[playery][playerx + dx] === Tile.FLUX ||
-    map[playery][playerx + dx] === Tile.AIR
+    map[playery][playerx + dx].isFlux() ||
+    map[playery][playerx + dx].isAir()
   ) {
     moveToTile(playerx + dx, playery);
   } else if (
-    (map[playery][playerx + dx] === Tile.STONE ||
-      map[playery][playerx + dx] === Tile.BOX) &&
-    map[playery][playerx + dx + dx] === Tile.AIR &&
-    map[playery + 1][playerx + dx] !== Tile.AIR
+    (map[playery][playerx + dx].isStone() ||
+      map[playery][playerx + dx].isBox()) &&
+    map[playery][playerx + dx + dx].isAir() &&
+    !map[playery + 1][playerx + dx].isAir()
   ) {
     map[playery][playerx + dx + dx] = map[playery][playerx + dx];
     moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx] === Tile.KEY1) {
-    remove(Tile.LOCK1);
+  } else if (map[playery][playerx + dx].isKey1()) {
+    removeLock1();
     moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx] === Tile.KEY2) {
-    remove(Tile.LOCK2);
+  } else if (map[playery][playerx + dx].isKey2()) {
+    removeLock2();
     moveToTile(playerx + dx, playery);
   }
 }
@@ -171,10 +264,10 @@ function moveVertical(dy: number) {
   ) {
     moveToTile(playerx, playery + dy);
   } else if (map[playery + dy][playerx] === Tile.KEY1) {
-    remove(Tile.LOCK1);
+    removeLock2();
     moveToTile(playerx, playery + dy);
   } else if (map[playery + dy][playerx] === Tile.KEY2) {
-    remove(Tile.LOCK2);
+    removeLock2();
     moveToTile(playerx, playery + dy);
   }
 }
@@ -222,22 +315,17 @@ function update() {
   updateMap();
 }
 
+function drawTile(g: CanvasRenderingContext2D, x: number, y: number) {
+  map[y][x].color(g);
+
+  if (!map[y][x].isAir() && !map[y][x].isPlayer())
+    g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+}
+
 function drawMap(g: CanvasRenderingContext2D) {
   for (let y = 0; y < map.length; y++) {
     for (let x = 0; x < map[y].length; x++) {
-      if (map[y][x] === Tile.FLUX) g.fillStyle = '#ccffcc';
-      else if (map[y][x] === Tile.UNBREAKABLE) g.fillStyle = '#999999';
-      else if (map[y][x] === Tile.STONE || map[y][x] === Tile.FALLING_STONE)
-        g.fillStyle = '#0000cc';
-      else if (map[y][x] === Tile.BOX || map[y][x] === Tile.FALLING_BOX)
-        g.fillStyle = '#8b4513';
-      else if (map[y][x] === Tile.KEY1 || map[y][x] === Tile.LOCK1)
-        g.fillStyle = '#ffcc00';
-      else if (map[y][x] === Tile.KEY2 || map[y][x] === Tile.LOCK2)
-        g.fillStyle = '#00ccff';
-
-      if (map[y][x] !== Tile.AIR && map[y][x] !== Tile.PLAYER)
-        g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      map[y][x].draw(g, x, y);
     }
   }
 }
