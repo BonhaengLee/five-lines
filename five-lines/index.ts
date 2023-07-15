@@ -36,6 +36,7 @@ interface Tile {
   isEdible(): boolean;
   isPushable(): boolean;
   moveHorizontal(dx: number): void;
+  moveVertical(dy: number): void;
 }
 
 class Air implements Tile {
@@ -85,6 +86,9 @@ class Air implements Tile {
   }
   moveHorizontal(dx: number) {
     moveToTile(playerx + dx, playery);
+  }
+  moveVertical(dy: number) {
+    moveToTile(playerx, playery + dy);
   }
 }
 
@@ -139,6 +143,9 @@ class Flux implements Tile {
     return false;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {
+    moveToTile(playerx, playery + dy);
+  }
 }
 
 class Unbreakable implements Tile {
@@ -192,6 +199,7 @@ class Unbreakable implements Tile {
     return false;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
 }
 
 class Player implements Tile {
@@ -240,6 +248,7 @@ class Player implements Tile {
     return false;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
 }
 
 class Stone implements Tile {
@@ -293,6 +302,7 @@ class Stone implements Tile {
     return true;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
 }
 
 class FallingStone implements Tile {
@@ -346,6 +356,7 @@ class FallingStone implements Tile {
     return false;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
 }
 
 class Box implements Tile {
@@ -407,6 +418,7 @@ class Box implements Tile {
       moveToTile(playerx + dx, playery);
     }
   }
+  moveVertical(dy: number) {}
 }
 
 class FallingBox implements Tile {
@@ -460,6 +472,7 @@ class FallingBox implements Tile {
     return false;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
 }
 
 class Key1 implements Tile {
@@ -516,6 +529,10 @@ class Key1 implements Tile {
     removeLock1();
     moveToTile(playerx + dx, playery);
   }
+  moveVertical(dy: number) {
+    removeLock1();
+    moveToTile(playerx, playery + dy);
+  }
 }
 
 class Lock1 implements Tile {
@@ -569,6 +586,7 @@ class Lock1 implements Tile {
     return false;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
 }
 
 class Key2 implements Tile {
@@ -622,6 +640,7 @@ class Key2 implements Tile {
     return false;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
 }
 
 class Lock2 implements Tile {
@@ -675,6 +694,7 @@ class Lock2 implements Tile {
     return false;
   }
   moveHorizontal(dx: number) {}
+  moveVertical(dy: number) {}
 }
 
 // 3. enum 이름 변경(Input -> RawInput) 후 컴파일러가 발생시킨 오류 확인
@@ -749,7 +769,7 @@ class Up implements Input {
     return false;
   }
   handle() {
-    moveVertical(-1);
+    map[playery + -1][playerx].moveVertical(-1);
   }
 }
 
@@ -767,7 +787,7 @@ class Down implements Input {
     return true;
   }
   handle() {
-    moveVertical(1);
+    map[playery + 1][playerx].moveVertical(1);
   }
 }
 
@@ -863,20 +883,6 @@ function moveToTile(newx: number, newy: number) {
   playery = newy;
 }
 
-function moveVertical(dy: number) {
-  if (
-    map[playery + dy][playerx].isFlux() ||
-    map[playery + dy][playerx].isAir()
-  ) {
-    moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx].isKey1()) {
-    removeLock1();
-    moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx].isKey2()) {
-    removeLock2();
-    moveToTile(playerx, playery + dy);
-  }
-}
 // 이건 4줄처럼 보이지만 8줄이다. 어떻게 해결할까?
 // 3번 번경으로 인한 컴파일러 오류 수정
 // 1. handleInput을 모든 클래스에 붙여 넣는다. 지우는 게 아님.
