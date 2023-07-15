@@ -804,14 +804,11 @@ function update() {
   updateMap();
 }
 
-function colorOfTile(g: CanvasRenderingContext2D, x: number, y: number) {
-  map[y][x].color(g);
-}
-
 function drawMap(g: CanvasRenderingContext2D) {
   for (let y = 0; y < map.length; y++) {
     for (let x = 0; x < map[y].length; x++) {
-      colorOfTile(g, x, y);
+      // 한줄짜리 메서드이므로 인라인화
+      map[y][x].color(g);
       if (!map[y][x].isPlayer())
         g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     }
