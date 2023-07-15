@@ -41,6 +41,11 @@ interface Tile {
   isBoxy(): boolean;
 }
 
+enum FallingState {
+  FALLING,
+  RESTING,
+}
+
 class Air implements Tile {
   isAir() {
     return true;
@@ -278,6 +283,11 @@ class Player implements Tile {
 }
 
 class Stone implements Tile {
+  // 생성자 매개변수 앞에 public 또는 private 키워드를 넣으면 자동으로 인스턴스 변수를 만들고 인자의 값을 할당한다.
+  constructor(private falling: FallingState) {
+    this.falling = falling;
+  }
+
   isAir() {
     return false;
   }
@@ -294,7 +304,7 @@ class Stone implements Tile {
     return true;
   }
   isFallingStone() {
-    return false;
+    return this.falling === FallingState.FALLING;
   }
   isBox() {
     return false;
@@ -327,7 +337,19 @@ class Stone implements Tile {
   isPushable() {
     return true;
   }
-  moveHorizontal(dx: number) {}
+  moveHorizontal(dx: number) {
+    // true를 isFallingStone() === false로 변경
+    if (this.isFallingStone() === false) {
+      if (
+        map[playery][playerx + dx + dx].isAir() &&
+        !map[playery + 1][playerx + dx].isAir()
+      ) {
+        map[playery][playerx + dx + dx] = this;
+        moveToTile(playerx + dx, playery);
+      }
+    } else if (this.isFallingStone() === true) {
+    }
+  }
   moveVertical(dy: number) {}
   isStony() {
     return true;
@@ -338,6 +360,10 @@ class Stone implements Tile {
 }
 
 class FallingStone implements Tile {
+  constructor(private falling: boolean) {
+    this.falling = falling;
+  }
+
   isAir() {
     return false;
   }
@@ -354,7 +380,7 @@ class FallingStone implements Tile {
     return false;
   }
   isFallingStone() {
-    return true;
+    return this.falling;
   }
   isBox() {
     return false;
@@ -387,7 +413,18 @@ class FallingStone implements Tile {
   isPushable() {
     return false;
   }
-  moveHorizontal(dx: number) {}
+  moveHorizontal(dx: number) {
+    if (this.isFallingStone() === false) {
+      if (
+        map[playery][playerx + dx + dx].isAir() &&
+        !map[playery + 1][playerx + dx].isAir()
+      ) {
+        map[playery][playerx + dx + dx] = this;
+        moveToTile(playerx + dx, playery);
+      }
+    } else if (this.isFallingStone() === true) {
+    }
+  }
   moveVertical(dy: number) {}
   isStony() {
     return true;
@@ -890,9 +927,9 @@ function transformTile(tile: RawTile) {
     case RawTile.PLAYER:
       return new Player();
     case RawTile.STONE:
-      return new Stone();
+      return new Stone(FallingState.RESTING);
     case RawTile.FALLING_STONE:
-      return new FallingStone();
+      return new Stone(FallingState.FALLING);
     case RawTile.BOX:
       return new Box();
     case RawTile.FALLING_BOX:
@@ -970,13 +1007,13 @@ function handleInputs() {
 
 function updateTile(x: number, y: number) {
   if (map[y][x].isStony() && map[y + 1][x] === new Air()) {
-    map[y + 1][x] = new FallingStone();
+    map[y + 1][x] = new Stone(true);
     map[y][x] = new Air();
   } else if (map[y][x].isBoxy() && map[y + 1][x].isAir()) {
     map[y + 1][x] = new FallingBox();
     map[y][x] = new Air();
   } else if (map[y][x].isFallingStone()) {
-    map[y][x] = new Stone();
+    map[y][x] = new Stone(false);
   } else if (map[y][x].isFallingBox()) {
     map[y][x] = new Box();
   }
