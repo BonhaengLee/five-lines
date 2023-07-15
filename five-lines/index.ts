@@ -35,6 +35,7 @@ interface Tile {
   draw(g: CanvasRenderingContext2D, x: number, y: number): void;
   isEdible(): boolean;
   isPushable(): boolean;
+  moveHorizontal(dx: number): void;
 }
 
 class Air implements Tile {
@@ -81,6 +82,9 @@ class Air implements Tile {
   }
   isPushable() {
     return false;
+  }
+  moveHorizontal(dx: number) {
+    moveToTile(playerx + dx, playery);
   }
 }
 
@@ -134,6 +138,7 @@ class Flux implements Tile {
   isPushable() {
     return false;
   }
+  moveHorizontal(dx: number) {}
 }
 
 class Unbreakable implements Tile {
@@ -186,6 +191,7 @@ class Unbreakable implements Tile {
   isPushable() {
     return false;
   }
+  moveHorizontal(dx: number) {}
 }
 
 class Player implements Tile {
@@ -233,6 +239,7 @@ class Player implements Tile {
   isPushable() {
     return false;
   }
+  moveHorizontal(dx: number) {}
 }
 
 class Stone implements Tile {
@@ -285,6 +292,7 @@ class Stone implements Tile {
   isPushable() {
     return true;
   }
+  moveHorizontal(dx: number) {}
 }
 
 class FallingStone implements Tile {
@@ -337,6 +345,7 @@ class FallingStone implements Tile {
   isPushable() {
     return false;
   }
+  moveHorizontal(dx: number) {}
 }
 
 class Box implements Tile {
@@ -388,6 +397,15 @@ class Box implements Tile {
   }
   isPushable() {
     return true;
+  }
+  moveHorizontal(dx: number) {
+    if (
+      map[playery][playerx + dx + dx].isAir() &&
+      !map[playery + 1][playerx + dx].isAir()
+    ) {
+      map[playery][playerx + dx + dx] = this;
+      moveToTile(playerx + dx, playery);
+    }
   }
 }
 
@@ -441,6 +459,7 @@ class FallingBox implements Tile {
   isPushable() {
     return false;
   }
+  moveHorizontal(dx: number) {}
 }
 
 class Key1 implements Tile {
@@ -492,6 +511,10 @@ class Key1 implements Tile {
   }
   isPushable() {
     return false;
+  }
+  moveHorizontal(dx: number) {
+    removeLock1();
+    moveToTile(playerx + dx, playery);
   }
 }
 
@@ -545,6 +568,7 @@ class Lock1 implements Tile {
   isPushable() {
     return false;
   }
+  moveHorizontal(dx: number) {}
 }
 
 class Key2 implements Tile {
@@ -597,6 +621,7 @@ class Key2 implements Tile {
   isPushable() {
     return false;
   }
+  moveHorizontal(dx: number) {}
 }
 
 class Lock2 implements Tile {
@@ -649,6 +674,7 @@ class Lock2 implements Tile {
   isPushable() {
     return false;
   }
+  moveHorizontal(dx: number) {}
 }
 
 // 3. enum 이름 변경(Input -> RawInput) 후 컴파일러가 발생시킨 오류 확인
@@ -687,7 +713,7 @@ class Right implements Input {
   // 4.1.4 - 4. handleInput -> handle로 변경(인터페이스에 반영된 이름)
   handle() {
     // 4.1.4 - 3. is메서드를 인라인하고, if(true)의 본문을 제외한 모든 걸 제거
-    moveHorizontal(1);
+    map[playery][playerx + 1].moveHorizontal(1);
   }
 }
 
@@ -705,7 +731,7 @@ class Left implements Input {
     return false;
   }
   handle() {
-    moveHorizontal(-1);
+    map[playery][playerx + -1].moveHorizontal(-1);
   }
 }
 
@@ -835,26 +861,6 @@ function moveToTile(newx: number, newy: number) {
   map[newy][newx] = new Player();
   playerx = newx;
   playery = newy;
-}
-
-function moveHorizontal(dx: number) {
-  if (map[playery][playerx + dx].isEdible()) {
-    moveToTile(playerx + dx, playery);
-  } else if (
-    map[playery][playerx + dx].isPushable() &&
-    map[playery][playerx + dx + dx].isAir() &&
-    !map[playery + 1][playerx + dx].isAir()
-  ) {
-    map[playery][playerx + dx + dx] = map[playery][playerx + dx];
-    moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx].isKey1()) {
-    // remove는 실제로는 Lock1, Lock2만 제거하는 함수임
-    removeLock1();
-    moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx].isKey2()) {
-    removeLock2();
-    moveToTile(playerx + dx, playery);
-  }
 }
 
 function moveVertical(dy: number) {
