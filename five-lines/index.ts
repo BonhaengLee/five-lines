@@ -41,9 +41,27 @@ interface Tile {
   isBoxy(): boolean;
 }
 
-enum FallingState {
-  FALLING,
-  RESTING,
+interface FallingState {
+  isFalling(): boolean;
+  isResting(): boolean;
+}
+
+class Falling implements FallingState {
+  isFalling() {
+    return true;
+  }
+  isResting() {
+    return false;
+  }
+}
+
+class Resting implements FallingState {
+  isFalling() {
+    return false;
+  }
+  isResting() {
+    return true;
+  }
 }
 
 class Air implements Tile {
@@ -304,7 +322,7 @@ class Stone implements Tile {
     return true;
   }
   isFallingStone() {
-    return this.falling === FallingState.FALLING;
+    return this.falling.isFalling();
   }
   isBox() {
     return false;
@@ -927,9 +945,9 @@ function transformTile(tile: RawTile) {
     case RawTile.PLAYER:
       return new Player();
     case RawTile.STONE:
-      return new Stone(FallingState.RESTING);
+      return new Stone(new Falling());
     case RawTile.FALLING_STONE:
-      return new Stone(FallingState.FALLING);
+      return new Stone(new Resting());
     case RawTile.BOX:
       return new Box();
     case RawTile.FALLING_BOX:
